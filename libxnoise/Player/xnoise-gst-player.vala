@@ -35,7 +35,7 @@ using Xnoise.Resources;
 using Xnoise.Utilities;
 
 
-// GstPlayFlags flags of playbin2
+// GstPlayFlags flags of playbin
 [Flags]
 private enum Gst.PlayFlag {
     VIDEO         =(1 << 0),
@@ -389,23 +389,23 @@ public class Xnoise.GstPlayer : GLib.Object {
         Gst.Buffer gst_buffer;
         Gdk.PixbufLoader pbloader;
         Gdk.Pixbuf? pixbuf;
-        Gst.Value? val = null;
+        Gst.Sample sample;
         uint i = 0;
         
         for(;;i++) {
-            Gst.Value? gstvalue;
+            Gst.Sample sample;
             string media_type;
             Gst.Structure cstruct;
             int imgtype;
-            gstvalue = taglist.get_value_index(Gst.TAG_IMAGE, i);
-            if(gstvalue == null)
+            sample = taglist.get_sample_index(Gst.TAG_IMAGE, i);
+            if(sample == null)
                 break;
             
-            gst_buffer = gstvalue.get_buffer();
-            if(gst_buffer == null) 
+            buffer = sample.get_buffer();
+            if(buffer == null)
                 continue;
             
-            cstruct = gst_buffer.caps.get_structure(0);
+            caps = sample.get_caps();
             media_type = cstruct.get_name();
             
             if(media_type == "text/uri-list")
@@ -499,7 +499,7 @@ public class Xnoise.GstPlayer : GLib.Object {
         taglist_buffer = null;
         pipe = new Gst.Pipeline("pipeline");
         
-        playbin   = ElementFactory.make("playbin2", null);
+        playbin   = ElementFactory.make("playbin", null);
         asink     = ElementFactory.make("autoaudiosink", null);
         ac1       = ElementFactory.make("audioconvert", null);
         ac2       = ElementFactory.make("audioconvert", null);
@@ -913,7 +913,7 @@ public class Xnoise.GstPlayer : GLib.Object {
         string message_name = msg.get_structure().get_name();
         //print("%s\n", message_name);
         if(message_name=="prepare-xwindow-id") {
-            var imagesink =(XOverlay)(msg.src);
+            var imagesink =(VideoOverlay)(msg.src);
             imagesink.set_property("force-aspect-ratio", true);
             imagesink.set_window_handle((uint)(Gdk.X11Window.get_xid(videoscreen.get_window())));
         }
